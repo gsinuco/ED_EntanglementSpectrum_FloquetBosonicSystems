@@ -1,3 +1,16 @@
+MODULE A_DAGGER_
+  IMPLICIT NONE
+  INTERFACE
+     SUBROUTINE a_dagger(i,state_in,state_out)
+       USE LATTICE
+       IMPLICIT NONE
+       INTEGER, DIMENSION(:), INTENT(IN)  :: state_in
+       INTEGER, DIMENSION(:), INTENT(OUT) :: state_out
+       INTEGER,                 INTENT(IN)  :: i
+     END SUBROUTINE a_dagger
+  END INTERFACE
+END MODULE A_DAGGER_
+
 MODULE INTERFACE
   IMPLICIT NONE
   INTERFACE
@@ -27,15 +40,36 @@ MODULE INTERFACE
        
      END SUBROUTINE HASHING
      
-     SUBROUTINE CHECK_HASHING(TAG,TAG_INDEX,BASIS_DIM,STATE,INFO)
+     !SUBROUTINE CHECK_HASHING(TAG,TAG_INDEX,BASIS_DIM,STATE,INFO)
+     SUBROUTINE CHECK_HASHING(TAG,TAG_INDEX,BASIS_DIM,INFO)
        USE LATTICE
        IMPLICIT NONE
-       INTEGER, DIMENSION(:,:),INTENT(IN) :: STATE
+       !INTEGER, DIMENSION(:,:),INTENT(IN) :: STATE
        INTEGER, DIMENSION(BASIS_DIM),   INTENT(IN) :: TAG,TAG_INDEX
        !  INTEGER, DIMENSION(N_SITES,BASIS_DIM),INTENT(IN) :: STATE
        INTEGER, INTENT(IN)  :: BASIS_DIM
-       INTEGER, INTENT(OUT) :: INFO
+       INTEGER, INTENT(INOUT) :: INFO
      END SUBROUTINE CHECK_HASHING
+
+     SUBROUTINE BASISV2(STATES,TAG_INDEX,BASIS_DIM,NP,NS)
+       USE LATTICE
+       USE STATE_OBJ
+       USE A_DAGGER_
+       IMPLICIT NONE
+       TYPE(STATE), DIMENSION(:), ALLOCATABLE, INTENT(OUT)          :: STATES
+       INTEGER,     DIMENSION(:), ALLOCATABLE, INTENT(OUT)          :: TAG_INDEX
+       INTEGER,                                INTENT(OUT)          :: BASIS_DIM
+       INTEGER,                                INTENT(IN), OPTIONAL :: NP,NS
+     END SUBROUTINE BASISV2
+
+     SUBROUTINE BASISV3(STATES,TAG_INDEX,BASIS_DIM,NP,NX,NY)
+         USE STATE_OBJ
+         IMPLICIT NONE
+        TYPE(STATE), DIMENSION(:),              INTENT(OUT)          :: STATES
+        INTEGER,     DIMENSION(:),              INTENT(OUT)          :: TAG_INDEX
+        INTEGER,                                INTENT(OUT)          :: BASIS_DIM
+        INTEGER,                                INTENT(IN), OPTIONAL :: NP,NX,NY
+     END SUBROUTINE BASISV3
 
      SUBROUTINE HOPPING_TERM(STATE,TAG,TAG_INDEX,H,INFO)       
        USE LATTICE
@@ -61,6 +95,7 @@ MODULE INTERFACE
        DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: W_SPACE
        INTEGER,                    INTENT(OUT):: INFO
      END SUBROUTINE LAPACK_FULLEIGENVALUES
+
      SUBROUTINE LAPACK_ZGEEV(H,N,W_SPACE,INFO) 
       IMPLICIT NONE
       INTEGER,                        INTENT(IN)    :: N
@@ -69,13 +104,64 @@ MODULE INTERFACE
       INTEGER,                        INTENT(OUT)   :: INFO
      END SUBROUTINE LAPACK_ZGEEV
 
+     SUBROUTINE LAPACK_ZGEEV_GPU_THUNKING(H,N,W,INFO)
+       !USE MAGMA
+       IMPLICIT NONE
+       INTEGER,                        INTENT(IN)    :: N
+       COMPLEX*16, DIMENSION(:),       INTENT(INOUT) :: H
+       COMPLEX*16, DIMENSION(:),       INTENT(OUT)   :: W
+       INTEGER,                        INTENT(OUT)   :: INFO
+     END SUBROUTINE LAPACK_ZGEEV_GPU_THUNKING
+
+     SUBROUTINE LAPACK_ZGEEV_GPU_NOTHUNKING(H,N,W,INFO)
+       !USE MAGMA
+       IMPLICIT NONE
+       INTEGER,                        INTENT(IN)    :: N
+       COMPLEX*16, DIMENSION(:,:),       INTENT(INOUT) :: H
+       COMPLEX*16, DIMENSION(:),       INTENT(OUT)   :: W
+       INTEGER,                        INTENT(OUT)   :: INFO
+     END SUBROUTINE LAPACK_ZGEEV_GPU_NOTHUNKING
+
      SUBROUTINE NEWTON_SEARCHING(elto,array,array_index,elto_index,array_size,INFO)       
        IMPLICIT NONE
        INTEGER,                        INTENT(IN)          :: elto,array_size
        INTEGER, DIMENSION(array_size), INTENT(IN)          :: array
-       INTEGER, DIMENSION(:),          INTENT(IN),OPTIONAL :: array_index
-       INTEGER,                        INTENT(OUT)         :: elto_index,INFO      
+       INTEGER, DIMENSION(array_size), INTENT(IN),OPTIONAL :: array_index
+       INTEGER,                        INTENT(OUT)         :: elto_index
+       INTEGER,                        INTENT(INOUT)       :: INFO
      END SUBROUTINE NEWTON_SEARCHING
+     
+
+     SUBROUTINE  TWO_BODY_ENERGY_SPECTRUM(STATES,EIGENVALUES_H,D,i_off,q,q_,E_MBX,E_MBY,INFO)
+        USE STATE_OBJ
+        IMPLICIT NONE
+        TYPE(STATE),       DIMENSION(:),   INTENT(IN)                 :: STATES
+        DOUBLE PRECISION,  DIMENSION(:),   INTENT(IN)                 :: EIGENVALUES_H
+        INTEGER,                           INTENT(IN)                 :: D, i_off,q,q_
+        DOUBLE PRECISION,  DIMENSION(:),   INTENT(OUT)                :: E_MBX,E_MBY
+        INTEGER,                           INTENT(INOUT)              :: INFO
+     END SUBROUTINE TWO_BODY_ENERGY_SPECTRUM
+
+     SUBROUTINE  MANY_BODY_SPECTRUM(STATES,U_AUX,q,q_,U_MB,D,INFO)
+       USE STATE_OBJ
+        IMPLICIT NONE
+        TYPE(STATE),       DIMENSION(:),   INTENT(IN)                 :: STATES
+        COMPLEX*16,        DIMENSION(:,:), INTENT(IN)                 :: U_AUX
+        INTEGER,                           INTENT(IN)                 :: q,q_ ! compare with previous version
+        COMPLEX*16,        DIMENSION(:,:), INTENT(OUT)                :: U_MB
+        INTEGER,                           INTENT(IN)                 :: D
+        INTEGER,                           INTENT(INOUT)              :: INFO
+     END SUBROUTINE MANY_BODY_SPECTRUM
+     
+     SUBROUTINE oneD_DENSITY(STATES,i_off,psi,rho,INFO)
+        USE STATE_OBJ
+        IMPLICIT NONE
+        TYPE(STATE),       DIMENSION(:),  INTENT(IN)    :: STATES
+        INTEGER,                          INTENT(IN) :: i_off
+        COMPLEX*16,        DIMENSION(:),  INTENT(IN)    :: psi
+        DOUBLE PRECISION,  DIMENSION(:),  INTENT(OUT)   :: rho
+        INTEGER,                          INTENT(INOUT) :: INFO
+     END SUBROUTINE oneD_DENSITY
 
   END INTERFACE
 END MODULE INTERFACE
@@ -92,6 +178,16 @@ MODULE INTERFACE_MAP
        INTEGER,                 INTENT(OUT)   :: INFO
      END SUBROUTINE STATEtoPARTITIONmap
 
+     SUBROUTINE STATEtoPARTITIONmapV2(STATES,TAG_INDEX,SITEMAP_A,SITEMAP_B,C,BASIS_DIM_A,BASIS_DIM_B,INFO)
+         USE STATE_OBJ
+        IMPLICIT NONE
+        TYPE(STATE),  DIMENSION(:),   INTENT(IN)    :: STATES
+        INTEGER,      DIMENSION(:),   INTENT(IN)    :: SITEMAP_A, SITEMAP_B,TAG_INDEX
+        INTEGER,      DIMENSION(:,:), INTENT(OUT)   :: C
+        INTEGER,      DIMENSION(:),   INTENT(INOUT) :: BASIS_DIM_A,BASIS_DIM_B
+        INTEGER,                      INTENT(OUT)   :: INFO
+      END SUBROUTINE STATEtoPARTITIONmapV2
+
   END INTERFACE
 END MODULE INTERFACE_MAP
 
@@ -99,13 +195,16 @@ END MODULE INTERFACE_MAP
 MODULE INTERFACE_FLOQUETSPECTRUM
   IMPLICIT NONE
   INTERFACE
-    SUBROUTINE FLOQUET_BOSE_HUBBARD_SUB(q_,U_T,U_FTY, EIGENVALUES_H,INFO)
+    SUBROUTINE FLOQUET_BOSE_HUBBARD_SUB(STATES,Q_T,U_FTY,U_MB,EIGENVALUES,INFO)
+      USE STATE_OBJ
       IMPLICIT NONE
-      COMPLEX*16, DIMENSION(:,:),INTENT(OUT):: U_T
-      COMPLEX*16, DIMENSION(:), INTENT(OUT) :: U_FTY
-      DOUBLE PRECISION, DIMENSION(:),INTENT(OUT):: EIGENVALUES_H
-      INTEGER, INTENT(IN) :: q_
-      INTEGER, INTENT(INOUT) :: INFO
+      TYPE(STATE),      DIMENSION(:),                INTENT(IN)    :: STATES
+      INTEGER,                                       INTENT(INOUT)    :: Q_T
+      COMPLEX*16,       DIMENSION(:),   ALLOCATABLE, INTENT(OUT)   :: EIGENVALUES
+      COMPLEX*16,       DIMENSION(:,:), ALLOCATABLE, INTENT(OUT)   :: U_MB
+      COMPLEX*16,       DIMENSION(:),                INTENT(OUT)   :: U_FTY
+      INTEGER,                                       INTENT(INOUT) :: INFO
     END SUBROUTINE FLOQUET_BOSE_HUBBARD_SUB
   END INTERFACE
 END MODULE INTERFACE_FLOQUETSPECTRUM
+

@@ -1,0 +1,77 @@
+SUBROUTINE oneD_DENSITY(STATES,i_off,psi,rho,INFO)
+
+  USE physical_constants
+  USE LATTICE
+  USE INTERACTION
+  USE TIME_DEPENDENT
+  !USE INTERFACE
+  USE STATE_OBJ
+
+  IMPLICIT NONE
+  TYPE(STATE),       DIMENSION(:),  INTENT(IN)    :: STATES
+  INTEGER,                          INTENT(IN) :: i_off
+  COMPLEX*16,        DIMENSION(:),  INTENT(IN)    :: psi
+  DOUBLE PRECISION,  DIMENSION(:),  INTENT(OUT)   :: rho
+  INTEGER,                          INTENT(INOUT) :: INFO
+
+  INTEGER i,D,n,j
+
+  INFO = 0
+  D = size(psi,1)
+
+  rho = 0.0
+
+  DO i=1,D
+
+    DO j=1,N_PARTICLES
+
+        n      = STATES(i_off + i)%n(j)
+        rho(n) = rho(n) + abs(psi(i))*abs(psi(i))
+
+    END DO
+
+  END DO
+
+END SUBROUTINE oneD_DENSITY
+
+!
+!SUBROUTINE twoD_DENSITY(STATES,psi,rho,INFO)
+!
+!  USE physical_constants
+!  USE LATTICE
+!  USE INTERACTION
+!  USE TIME_DEPENDENT
+!  USE INTERFACE
+!  USE STATE_OBJ
+!
+!  IMPLICIT NONE
+!  TYPE(STATE),       DIMENSION(:),   INTENT(IN)                 :: STATES
+!  COMPLEX*16,        DIMENSION(:),   INTENT(IN)  :: psi
+!  DOUBLE PRECISION,  DIMENSION(:,:), INTENT(OUT) :: rho
+!  INTEGER, INTENT(INOUT) :: INFO
+!
+!  INTEGER i,D
+!
+!  D = size(psi,1)
+!
+!
+!  rho = 0.0
+!  DO i=1,D
+!
+!   INTEGER :: TAG   ! state tag
+!   INTEGER, DIMENSION(N_PARTICLES) :: site ! where there are particles
+!   INTEGER, DIMENSION(N_PARTICLES) :: occupation ! number of particles in site
+!   INTEGER, DIMENSION(N_PARTICLES) :: n
+!   INTEGER, DIMENSION(N_PARTICLES) :: m   ! coordinates (n,m) == (x,y)
+!
+!    DO j=1,N_PARTICLES
+!
+!        n = STATES(i)%n(j)
+!        m = STATES(i)%m(j)
+!        rho(n,m) = rho(n,m) + abs(psi)*abs(psi)
+!
+!    END DO
+!
+!  END DO
+!  END SUBROUTINE
+!

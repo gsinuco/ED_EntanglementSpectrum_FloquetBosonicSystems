@@ -39,6 +39,8 @@ SUBROUTINE LAPACK_FULLEIGENVALUES(H,N,W_SPACE,INFO)
   DEALLOCATE(WORK)
   DEALLOCATE(RWORK) 
   DEALLOCATE(H_AUX)
+  !DEALLOCATE(Z)
+
 END SUBROUTINE LAPACK_FULLEIGENVALUES
       
 
@@ -46,10 +48,10 @@ END SUBROUTINE LAPACK_FULLEIGENVALUES
 SUBROUTINE LAPACK_ZGEEV(H,N,W_SPACE,INFO)
  
    IMPLICIT NONE
-   INTEGER,                        INTENT(IN)    :: N
-   COMPLEX*16, DIMENSION(:,:),     INTENT(INOUT) :: H
-   DOUBLE PRECISION, DIMENSION(:), INTENT(OUT)   :: W_SPACE
-   INTEGER,                        INTENT(INOUT)   :: INFO
+   INTEGER,                    INTENT(IN)    :: N
+   COMPLEX*16, DIMENSION(:,:), INTENT(INOUT) :: H
+   COMPLEX*16, DIMENSION(:),   INTENT(OUT)   :: W_SPACE
+   INTEGER,                    INTENT(INOUT) :: INFO
 
 ! 
 !   !---SETTING  LAPACK VARIABLES: START ---------!
@@ -64,7 +66,7 @@ SUBROUTINE LAPACK_ZGEEV(H,N,W_SPACE,INFO)
 
 
    JOBVL = 'N'
-   JOBVR = 'V'
+   JOBVR = 'N'
 
    LDA   =  N
    LDVL  =  1
@@ -90,5 +92,62 @@ SUBROUTINE LAPACK_ZGEEV(H,N,W_SPACE,INFO)
 
    DEALLOCATE(WORK)
    DEALLOCATE(RWORK) 
+   DEALLOCATE(VL)
+   DEALLOCATE(VR)
    
  END SUBROUTINE LAPACK_ZGEEV
+
+ 
+!!$ SUBROUTINE LAPACK_ZGEEV_GPU(H,N,W,INFO)
+!!$   
+!!$   USE MAGMA
+!!$   IMPLICIT NONE
+!!$   INTEGER,                  INTENT(IN)    :: N
+!!$   COMPLEX*16, DIMENSION(:), INTENT(INOUT) :: H
+!!$   COMPLEX*16, DIMENSION(:), INTENT(OUT)   :: W
+!!$   INTEGER,                  INTENT(INOUT) :: INFO
+!!$   
+!!$   ! 
+!!$   !   !---SETTING  LAPACK VARIABLES: START ---------!
+!!$   !.. Scalar Arguments ..
+!!$   CHARACTER          JOBVL, JOBVR
+!!$   INTEGER            LDA, LDVL, LDVR, LWORK,i_
+!!$   !*     ..
+!!$   !*     .. Array Arguments ..
+!!$   DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: RWORK
+!!$   COMPLEX*16, DIMENSION(:),ALLOCATABLE        :: VL,VR
+!!$   COMPLEX*16, DIMENSION(:),ALLOCATABLE        :: WORK
+!!$   
+!!$   call cublas_init()
+!!$   
+!!$   JOBVL = 'N'
+!!$   JOBVR = 'N'
+!!$   
+!!$   LDA   =  N
+!!$   LDVL  =  1
+!!$   LDVR  =  N
+!!$   
+!!$   ALLOCATE(VL(LDVL*LDVL))
+!!$   ALLOCATE(VR(LDVR*LDVR))
+!!$   ALLOCATE(WORK(1))
+!!$   ALLOCATE(RWORK(2*N))
+!!$   !---- use magma_zgeev to get the optimun value of LWORK
+!!$   LWORK = -1
+!!$   call magmaf_zgeev(JOBVL,JOBVR, N, H, N, W, VL,LDVL,&
+!!$        & VR,LDVR, WORK, LWORK,RWORK,INFO) 
+!!$   IF(INFO /= 0) WRITE(*,*) "LWORK REQUEST FAILED"
+!!$   LWORK = INT(REAL(WORK(1)))
+!!$   DEALLOCATE(WORK)
+!!$   ALLOCATE(WORK(LWORK))
+!!$   call magmaf_zgeev(JOBVL,JOBVR, N, H, N, W, VL,LDVL,&
+!!$        & VR,LDVR, WORK, LWORK,RWORK,INFO) 
+!!$   H = VR
+!!$   IF(INFO /= 0) WRITE(*,*) "DIAG FAIL"
+!!$   
+!!$   
+!!$   DEALLOCATE(WORK)
+!!$   DEALLOCATE(RWORK) 
+!!$   DEALLOCATE(VL)
+!!$   DEALLOCATE(VR)
+!!$   
+!!$ END SUBROUTINE LAPACK_ZGEEV_GPU
