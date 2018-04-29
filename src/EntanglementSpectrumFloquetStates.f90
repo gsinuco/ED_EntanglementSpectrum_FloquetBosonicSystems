@@ -1,4 +1,4 @@
-!Single particle case
+! Single particle case
 ! two particles
 
 !BASISV2(STATES,BASIS_DIM): generates the state basis for two particles. It loops through combinations of all possible n's (first index)

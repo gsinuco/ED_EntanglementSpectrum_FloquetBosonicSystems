@@ -1,0 +1,29 @@
+23rd AUGUST 2014
+
+Last day working on this version. This does not scale very well to large lattices (e.g. 128x128), but  produces the spectrum in case os 32x32 in a 1.5h on the cpu and 1h with the gpu.   The main bottlenecks are:
+
+- The array describing the states is very big and not needed all the time. In practice, for the non-interating case, it is sufficient to store states of m(1)=m(2)=1 and m(1)=1 and m(2)=2.
+
+- The U_MB matrix is very big to store. This version stores two huge U_MB matrices corresponding to the cases q=q_ and q!=q_.  In the new version we will run all possible qs, and then all combination q,q_, in such a wayu that only one matrix have to be stored and used.
+
+- the matrix multiplication
+
+  matmul(u_mb,matmul(u_y,u_mb))
+
+  can be made more quickly since u_y is diagonal
+
+
+Thus, I have to modify many routines and theinternal working of the code. So, it is better to leave this version as it stands and start another one having in mind the improvements above mentioned. 
+
+
+8th April 2015
+
+Do not what happen. I produced a V2 of the ED entanglement spectrum floquet, but never used it to produce full results. In principle, it the current version produces
+the floquet spectrum of a 2-body system. Never tried the entanglement spectrum.
+
+Now, I am going to work in the full problem: small lattice and N particles. At this point, I think basisV3 produces a correct basis.
+
+- There is a lot of unused code: 
+	- Basis
+	- 
+

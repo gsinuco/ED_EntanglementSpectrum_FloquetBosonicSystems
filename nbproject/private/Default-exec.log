@@ -1,0 +1,13 @@
+called: gcc
+	/home/german/Dropbox/Programs/ED-EntanglementSpectrum-FloquetV3
+	gcc
+	-lgsl
+	-lgslcblas
+	-O3
+	-static
+	-g
+	-c
+	-o
+	/home/german/Dropbox/Programs/ED-EntanglementSpectrum-FloquetV3/src/fortran.o
+	/home/german/Dropbox/Programs/ED-EntanglementSpectrum-FloquetV3/src/fortran.c
+

@@ -1,0 +1,6 @@
+gcc -lgsl -lgslcblas -O3  -static -g    -c -o /home/german/Dropbox/Programs/ED-EntanglementSpectrum-FloquetV3/src/fortran.o /home/german/Dropbox/Programs/ED-EntanglementSpectrum-FloquetV3/src/fortran.c
+/home/german/Dropbox/Programs/ED-EntanglementSpectrum-FloquetV3/src/fortran.c:65:55: fatal error: cublas.h: No such file or directory
+ #include "cublas.h"   /* CUBLAS public header file  */
+                                                       ^
+compilation terminated.
+make: *** [/home/german/Dropbox/Programs/ED-EntanglementSpectrum-FloquetV3/src/fortran.o] Error 1
