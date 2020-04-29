@@ -42,7 +42,7 @@ SOURCE_DIR = /home/german/Dropbox/Programs/ED-EntanglementSpectrum-FloquetV3/src
 
 #all: ESFS_GPU ESFS ESFS_THUNKING
 
-all:ESFS_linux
+all:ESFS_linux ESFS
 # $(SOURCE_DIR)fortran_thunking.o: $(SOURCE_DIR)fortran_thunking.c
 #	nvcc -O3 -DCUBLAS_USE_THUNKING -DCUBLAS_GFORTRAN -I/usr/local/cuda/include  -c  $(SOURCE_DIR)fortran_thunking.c -o $(SOURCE_DIR)fortran_thunking.o
 

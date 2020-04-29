@@ -40,23 +40,11 @@
         <in>quick-sort-index-table.f90</in>
         <in>subset.f90</in>
       </df>
-      <in>a_dagger_.mod</in>
       <in>fortran.c</in>
       <in>fortran_common.h</in>
       <in>fortran_thunking.c</in>
       <in>fortran_thunking.h</in>
-      <in>interaction.mod</in>
-      <in>interface.mod</in>
-      <in>interface_floquetspectrum.mod</in>
-      <in>interface_map.mod</in>
-      <in>lattice.mod</in>
-      <in>matrix_aux.mod</in>
-      <in>physical_constants.mod</in>
-      <in>state_obj.mod</in>
-      <in>sublattice.mod</in>
-      <in>tasks.mod</in>
       <in>testcudaflag.f90</in>
-      <in>time_dependent.mod</in>
     </df>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>

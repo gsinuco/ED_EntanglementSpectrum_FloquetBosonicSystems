@@ -1,0 +1,174 @@
+!gfortran HOSTFTADTER.f90 -llapack -lblas
+MODULE INTERFACE
+  IMPLICIT NONE
+  INTERFACE
+     
+     SUBROUTINE LAPACK_FULLEIGENVALUES(H,N,W_SPACE,INFO)
+       INTEGER,                    INTENT(IN) :: N
+       COMPLEX*16, DIMENSION(:,:), INTENT(INOUT) :: H  
+       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: W_SPACE
+       INTEGER,                    INTENT(OUT):: INFO
+     END SUBROUTINE LAPACK_FULLEIGENVALUES
+  END INTERFACE
+END MODULE INTERFACE
+
+PROGRAM BUTTERFLY
+  
+  USE INTERFACE
+  
+  IMPLICIT NONE
+  INTEGER NX,NY,K,Q,K_,INFO
+  DOUBLE PRECISION JX,JY,ALPHA
+  
+  DOUBLE PRECISION :: PI
+  COMPLEX*16,       DIMENSION(:,:), ALLOCATABLE:: H
+  COMPLEX*16,       DIMENSION(:,:), ALLOCATABLE:: H_AUX
+  DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: EIGENVALUES
+  
+  NX = 201
+  NY = 201
+  ALLOCATE(H(NX,NX))
+  !ALLOCATE(H_AUX(NX,NX))
+  ALLOCATE(EIGENVALUES(NX))
+  
+  PI =  4.0*ATAN(1.0)
+  
+  JX = -1.0
+  JY = -1.0
+  ALPHA = 10.0/201.0
+  
+  
+  DO Q=1,NY
+     
+     H = DCMPLX(0.0,0.0)
+     
+     DO K=1,NX-1
+        !K_ = MOD(K + 1,NX)
+        !IF(K_.EQ.0) K_ = NX
+        K_ = K+1
+        H(K,K_) = -JX
+        !write(*,*) k,k_
+     END DO
+     H(1,NX) = -JX
+     
+     H = H + TRANSPOSE(CONJG(H))
+     
+!     H_AUX= H
+!     CALL LAPACK_FULLEIGENVALUES(H_AUX,NX,EIGENVALUES,INFO)
+!     WRITE(*,207) EIGENVALUES
+!     WRITE(*,*)
+!     DO K=1,NX
+!        WRITE(*,*) -JX*2.0*COS(2*PI*K/NX)
+!     END DO
+!     H_AUX = MATMUL(MATMUL(TRANSPOSE(H_AUX),H),CONJG(H_AUX))
+!     WRITE(*,*)
+!     DO K=1,NX
+!        WRITE(*,207) REAL(H_AUX(K,:))
+!     END DO
+
+     DO K=1,NX
+        H(K,K) = -JY*2.0*COS(2*PI*Q/NY - 2*PI*ALPHA*K)
+        !WRITE(*,*) ABS(H(K,:))
+     END DO
+     !H_AUX = MATMUL(MATMUL(TRANSPOSE(H_AUX),H),CONJG(H_AUX))
+     !DO K=1,NX
+     !   WRITE(*,207) REAL(H_AUX(K,:))
+     !END DO
+
+     CALL LAPACK_FULLEIGENVALUES(H,NX,EIGENVALUES,INFO)
+     !do i=1,N_SITES_X
+     !write(1,2010) 1.0*k_,1.0*i,EIGENVALUES_q(i)
+     !end do	
+     WRITE(*,*) (EIGENVALUES(K), K =1,NX)
+
+     !CALL LAPACK_FULLEIGENVALUES(H_AUX,NX,EIGENVALUES,INFO)
+     !do i=1,N_SITES_X
+     !write(1,2010) 1.0*k_,1.0*i,EIGENVALUES_q(i)
+     !end do	
+     !WRITE(*,*) (EIGENVALUES(K), K =1,NX)
+     
+  END DO
+
+  WRITE(*,*)
+  WRITE(*,*)
+
+  
+!!$  DO Q=1,NY
+!!$     
+!!$     H = DCMPLX(0.0,0.0)
+!!$     
+!!$     DO K=1,NX
+!!$        K_ = MOD(K + INT(abs(ALPHA*NX)),NX)
+!!$        IF(K_.EQ.0) K_ = NX       
+!!$        H(K,K_) = -JY*EXP(DCMPLX(0.0,PI)*2.0*Q/(1.0*NY))
+!!$        !write(*,*) k,k_
+!!$     END DO
+!!$     
+!!$     H = H + TRANSPOSE(CONJG(H))
+!!$     
+!!$     DO K=1,NX
+!!$        H(K,K) = H(K,K) + DCMPLX(-JX*2.0*COS(2*PI*K/NX),0.0)
+!!$        !WRITE(*,207) real(H(K,:))
+!!$     END DO
+!!$     
+!!$     CALL LAPACK_FULLEIGENVALUES(H,NX,EIGENVALUES,INFO)
+!!$     !do i=1,N_SITES_X
+!!$     !write(1,2010) 1.0*k_,1.0*i,EIGENVALUES_q(i)
+!!$     !end do	
+!!$     WRITE(*,*) (EIGENVALUES(K), K =1,NX)
+!!$     !WRITE(*,*)
+!!$  END DO
+!!$  
+!!$  WRITE(*,*)
+!!$  WRITE(*,*)
+  
+DEALLOCATE(H)
+DEALLOCATE(EIGENVALUES)
+
+
+207 FORMAT(7e15.6)  
+END PROGRAM BUTTERFLY
+
+SUBROUTINE LAPACK_FULLEIGENVALUES(H,N,W_SPACE,INFO)
+
+  IMPLICIT NONE
+  INTEGER,                        INTENT(IN) :: N
+  COMPLEX*16, DIMENSION(:,:),     INTENT(INOUT) :: H
+!  COMPLEX*16, DIMENSION(:,:),     INTENT(OUT) :: Z
+  DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: W_SPACE
+  INTEGER,                        INTENT(OUT):: INFO
+    
+
+  !---SETTING  LAPACK VARIABLES: START ---------!
+  CHARACTER         JOBZ, UPLO
+  INTEGER           LWORK,LDA
+  INTEGER,          DIMENSION(:),   ALLOCATABLE :: IWORK,ISUPPZ
+  DOUBLE PRECISION, DIMENSION(:),   ALLOCATABLE :: RWORK
+  COMPLEX*16,       DIMENSION(:),   ALLOCATABLE :: WORK
+  COMPLEX*16,       DIMENSION(:,:), ALLOCATABLE :: Z,H_AUX  
+  JOBZ = 'V'
+  UPLO = 'L'  
+ 
+  ALLOCATE(H_AUX(N,N))
+  H_AUX = 0.0
+  LDA   =  N
+  LWORK = 2*N
+!  ALLOCATE(W_SPACE(N))
+  ALLOCATE(WORK(2*N))
+  ALLOCATE(RWORK(3*N-2))
+  !---- use zheev to get the optimun value of LWORK
+  WORK = -1
+  CALL ZHEEV(JOBZ,UPLO,N,H_AUX,LDA,W_SPACE,WORK,LWORK,RWORK,INFO)
+  LWORK = INT(WORK(1))
+  DEALLOCATE(WORK)
+  ALLOCATE(WORK(LWORK))
+  IF(INFO /= 0) WRITE(*,*) "DIAG FAIL"
+  
+  CALL ZHEEV(JOBZ,UPLO,N,H,LDA,W_SPACE, WORK, LWORK, RWORK,INFO)       
+        
+ ! DEALLOCATE(W_SPACE)
+  DEALLOCATE(WORK)
+  DEALLOCATE(RWORK) 
+  DEALLOCATE(H_AUX)
+END SUBROUTINE LAPACK_FULLEIGENVALUES
+      
